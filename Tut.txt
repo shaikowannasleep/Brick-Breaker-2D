@@ -1,0 +1,1851 @@
+Introduction
+0:00
+hello my name is adam in this video we are going to learn how to make brick breaker in unity brick breaker is a
+0:07
+clone of the classic arcade game breakout which the player must smash a wall of bricks by deflecting a bouncing
+0:14
+ball with a paddle when all the bricks have been destroyed the player advances to a new harder level the player gets
+0:21
+three lives to start with a life is lost if the ball hits the bottom of the screen if all lives are lost the game is
+0:28
+over this tutorial will cover similar aspects to my pong video but it will also
+0:34
+include other topics such as having multiple levels and improved physics
+0:39
+if you need help at any point in the tutorial feel free to join our discord community where we can offer direct help
+0:46
+there is a link in the description of the video please consider subscribing to the channel to support the amount of effort
+0:52
+it takes to create a video like this one it is completely free but it helps me a
+0:57
+ton thank you enjoy the video let's begin by creating a new project
+Project Creation
+1:03
+using the unity hub in the top right corner we can click the blue new button to create a new project
+1:09
+we can even select the drop down next to it to select the specific version of unity we want to use
+1:15
+for this tutorial it won't really matter as we're not going to be utilizing any special features
+1:21
+that said i will be using unity 2019.4 if you want to follow along exactly
+1:26
+once again shouldn't really matter we're going to choose that for templates here we're going to use
+1:32
+the 2d template since this is going to be a 2d game and then we can simply name our project
+1:38
+whatever we would like i'll call it brick breaker and choose wherever you would like to save the project click the
+1:44
+create button and then this might take a couple minutes to initialize so we'll pick it back up as soon as it's finished
+Scene Setup
+1:52
+once your project has finished initializing it should look something like this by default unity provides us a sample
+1:58
+scene in this scene is one game object which we can see in our hierarchy in the left
+2:04
+this hierarchy displays all the game objects that exist in the scene in this case it's a camera and on the right is
+2:10
+our inspector where we can see all the components and the properties of that object
+2:16
+if you've seen some of my other tutorials you know we usually do our scene setup first and we're going to
+2:21
+continue with that pattern today however we're going to do something a little bit different that we haven't done in any of
+2:26
+my other tutorials which is that we're going to set up our game such that we can have multiple
+2:32
+levels and each level will be represented by a different scene
+2:39
+and then along with that we need a way to maintain some global state across all
+2:44
+of our levels such as our score lives and things like that so let's actually
+2:50
+start by taking the sample scene and i'm going to rename this and just call this global
+2:58
+and we'll reload that and then i'm going to create two more scenes or at least one more for now i'm
+3:04
+gonna create one called level one and i guess i will create one more called
+3:09
+level two for your particular game you might obviously have
+3:15
+more than just two levels in this video we're not going to go through every single level i just want
+3:21
+to show you how you can set up your game such that you can have multiple levels it'll still be up to you
+3:28
+to actually design each individual level to be different from the others but
+3:34
+we'll at least put that structure in place so you can load level one level two level three etc
+3:42
+so we have our global scene and then our individual level scenes in our global scene we actually don't
+3:48
+need any game objects well that's not true but we don't need this camera here so we can actually delete that from our
+3:55
+global scene and we can create a new game object that's just an empty game object so we
+4:01
+can right click in our hierarchy create empty i'm going to reset the transform here
+4:07
+by clicking the three dot menu and choosing reset and i'm going to actually call this game manager
+4:13
+which will be one of our scripts so we'll end up adding a script to this
+4:19
+and then just to show you how this works with levels in the left here's our hierarchy you can
+4:24
+see we have our global scene is the one that's open we can also drag in other scenes here
+4:30
+and we can have multiple levels loaded at the same time so here i can have global where we have our game manager
+4:37
+i also have level one which has a main camera by default and same thing i can load in level two and now we can have
+4:44
+all of those low levels loaded simultaneously if i want i can remove some or i can
+4:50
+unload them and then i can also remove them that's not deleting the actual scene
+4:57
+it's just removing them from us being able to preview it so the first thing we want to do is
+Loading Levels
+5:03
+create a script that'll allow us to actually switch between levels via code because
+5:09
+at some point in our code we're going to have to determine okay you've beaten this level now i need to load the next
+5:14
+one so we're going to actually start by creating a script right away in the beginning of this tutorial
+5:20
+we're just going to get some basic some basic logic in place and we'll expand upon it as we go
+5:26
+so first i'm going to create a new folder called scripts in here i'm going to right click i'm
+5:31
+going to say create c-sharp script and i'm going to call this game manager
+5:37
+and we're going to take this new script and we're going to drag it onto our a manager object so i selected that object
+5:44
+in our global scene and i dragged it over here so now we have our game
+5:49
+manager script that will be running on this object i'm going to go ahead and edit the script
+5:58
+i'm going to reload that if you're using vs code like i am it might prompt you to specify which
+6:03
+project you want to select you'll want to select the solution file the sln so brickbreaker.sln
+6:10
+and here by default when you create a script in unity it creates a class that inherits from model behavior has a
+6:17
+couple functions that are commonly used i actually like to delete everything and just kind of start fresh
+6:23
+i also delete the these two system imports because they're not actually used
+6:29
+unless you do something specifically to use them but i like to kind of just start fresh
+6:35
+so in our game manager we want to start by adding a function called awake which
+6:40
+is a function that unity provides for us and unity will call this automatically when this script is first
+6:47
+initialized in this function we want to call another function unity provides to us which is
+6:53
+called don't destroy unload and then in here we need to specify which game object to not destroy and you can see by
+7:01
+the description it says do not destroy the target object when loading a new scene so some of you might already be
+7:08
+able to understand why we're doing this um but before i explain that we pass in this game object so the game
+7:15
+object that this game manager is attached to which is our game manager object that we added to our global scene
+7:22
+because that is the game object that we added the script to so don't destroy and load the reason we
+7:29
+want to do this is because we want this game object to persist across all scenes
+7:35
+typically by default when you load another scene in unity it's going to
+7:41
+unload the previous scene and delete all of those game objects
+7:46
+and in this case we want our game manager to persist the entire time because our game manager is going to
+7:51
+keep track of score and lives and other things like that we tell it right away hey do not destroy
+7:57
+this game object even when later we load level 1 level 2 etc
+8:03
+so that's the first thing we want to do and from here we can add another function called start
+8:10
+which is another function unity calls us calls automatically when this script first starts the very first frame that
+8:17
+this object or the script is enabled this function will get called and when we start we're going to call
+8:23
+another function called new game now new game does not exist by unity you can see i'm getting an error so we're going to
+8:29
+go ahead and add that new game and in our new game we can do a couple
+8:35
+things for one we want to reset the state of our game such as our score and our lives
+8:41
+we also want to make sure we lo we load level one so we always start at level
+8:46
+one makes sense we don't have some of those variables that i just mentioned though like score
+8:51
+and lives so let's go ahead and add those first we can add a variable for score
+8:57
+and let me go ahead and turn off my copilot here so it isn't in the way so we have score
+9:04
+and we have lives by default our lives will be three it's up to you though what you want that to
+9:09
+be and our score will default to two or to zero i don't know why i said two um and let's go ahead and also add one
+9:16
+other variable for the level we're currently on and so by default level one
+9:22
+so when we start a new game we want to reset our score to zero we want to reset our lives to three the
+9:29
+same you know the same values we're using up there and then we also want to load level one
+9:35
+and there's going to be a number of things we need to do when we load levels so let's create a new function for that
+9:40
+as well we'll we'll have a function called load level and let's pass in the level we want to
+9:46
+load so that'll be an integer indicate one two three etc
+9:52
+and then in our new game we can say load level one
+9:58
+in load level we of course should set our variable so let's do that first
+10:04
+level equals level this dot level so this is referring to our game manager so this variable up
+10:10
+here is going to equal whatever we pass into the function
+10:15
+and then from here we can actually load this scene that corresponds to this level and to do that we first need to
+10:23
+import unity engine dot scene management
+10:29
+this will give us access to a class called scene manager which we use to load levels or to load scenes
+10:36
+so here now we can say scene manager dot load scene and we need to give it a name
+10:43
+we can well we can either give it a name or we can give it a build index which is
+10:48
+something we need to discuss real quick let me go back to unity actually
+10:54
+and let's look at something real quick before we continue so we created our three scenes global
+11:00
+level one level two you might obviously have a lot more than that if we go to file
+11:06
+oops file build settings here we can see scenes and build there's nothing in there we want to make sure
+11:13
+we're dragging those in this is what this will do is when you create a build for your game when you
+11:19
+actually build your game into an executable these are all the scenes that will be included you want to obviously make sure
+11:26
+you're including all the scenes and the order here could matter
+11:31
+so when we load our scene in our script we can either specify the index of that
+11:37
+scene which is going to correspond to these numbers over here 0 1 2 etc
+11:44
+or we can load them by the name it's usually better to load them by the
+11:50
+name as the build indexes can change very easily
+11:55
+and as you add more and more and ex and so on and so oftentimes i find that doing it by build
+12:02
+endec build index ends up leading to more problems as you forget to update it and so on
+12:08
+whereas the level names tend to be a little bit more meaningful and so for us we know all of our levels
+12:14
+are going to follow a naming convention where it's level one level two level
+12:20
+three etc so what we can do is we can concat a string together for that so we
+12:26
+can say level and then plus the number here which is our integer
+12:32
+and this will form a string that's level one level two level three etc and so that is loading the scene for the
+12:39
+respective level now notice what happens if we run this now
+12:46
+let that recompile let's run this and we're running it from the global scene we won't actually run the game from
+12:52
+level one or level two we're going to start in global which is where our game manager is and then we'll click play
+12:59
+from there and so notice here on the left it just switched it switched to level one so it
+13:04
+loaded level one and then notice there's a new thing here that shows up don't destroy unload that is our scene our
+13:12
+global scene that has our game manager because we told it in the script not to
+13:17
+destroy unload and so all that is working correctly and that is the basic
+13:23
+structure for being able to load new scenes so later in our code
+13:29
+we can advance to the next level by just saying load level you know current level
+13:35
+plus one you know and so on but we'll get to that later we'll definitely be adding more to this over
+13:41
+the course of the video next let's go ahead and start designing
+Level Design
+13:47
+our first level and this is where you get to be a little bit creative because it's really up to
+13:53
+you to decide how you want to set up your levels first i'm going to import some sprites
+14:00
+that i can use throughout all of the game so let's create a folder for sprites
+14:07
+i'm going to drag these in these are some custom sprites that i have created these are not required at
+14:13
+all um so feel free to use your own sprites if you would like you can certainly use
+14:19
+mine as well these will all be made available on github let me show you how you will download
+14:26
+those on github here let me go to workbreaker yeah so github.com cigarette
+14:33
+slash unity dash brick dash breaker dash tutorial there'll be a link in the description of the video
+14:39
+when you go here there is a download link which will download the in full project which contains everything
+14:45
+you can also individually go to the assets folder in the spreads folder where you can find all the sprites but
+14:52
+it'll probably be easier just to click the download link but once again feel free to use your own sprites you don't
+14:58
+even need to use custom sprites technically this whole game is simple enough where you can get away just using some of the
+15:05
+built-in sprites that unity provides so for example you can right-click in your project panel and choose create
+15:12
+sprites and then you can use square as well as the
+15:20
+circle sprite so you can use the square sprite for all of the rectangular things the bricks the
+15:26
+paddle and you can use a circle for the ball you can also use the square for the ball it doesn't really matter so
+15:31
+it doesn't actually matter what sprites you use but i'm going to be using these to make the game look a little bit better
+15:38
+if you are using these we might need to change some of these settings here
+15:44
+um so if we select all of these sprites we want to change our filter mode here
+15:50
+from bilinear to point and then that's really all that matters
+15:55
+everything else can stay the same so we'll apply those changes
+16:00
+and now that we have our sprites we can start setting up our level now we're going to switch over to level one we
+16:06
+don't want to do this within our global scene we want to make sure we're on level one we can switch over and start
+16:12
+adding things to here now of course by default unity provides us a camera
+16:18
+and so the first thing i want to do is really just change the background color of our camera
+16:24
+if we switch to our game tab here we can get a preview of what the actual game looks like
+16:30
+i'm just going to change this color to this color over here oops i'm gonna copy
+16:36
+from my other project um so if i go to our camera here there's a background i can click on that and
+16:42
+then i can change the value here this is the hexadecimal value i'll be using once again doesn't matter is this completely
+16:49
+up to you how you want to personalize and make the game unique the other thing that is going to be
+16:56
+important is changing the size of our camera i'm going to double this i'm going to change it from 5 to 10. this is
+17:02
+going to do is effectively zoom out or pull the camera farther away so there's more space for us to work with if you
+17:09
+see me change this if we go closer to five we have half the amount of space to
+17:14
+work with so i'm going to increase that also when we're here in our game view i probably
+17:21
+want to change our aspect ratio to 16 by nine because that's going to be kind of the aspect ratio i'm gonna be designing
+17:28
+and kind of basing the whole game around all right so from here we really need
+17:34
+three different three different types of objects we need our paddle we need our ball and we need
+17:41
+our bricks the bricks can be arranged however you want but certainly the ball and the
+17:47
+paddle will be more uniform so let's start with those let's create an empty
+17:52
+game object here by right-clicking our hierarchy i'm going to call this paddle
+17:58
+i'm going to reset the transform there to its default and then we need to think about what are
+18:03
+some of the components we need for our paddle well we need a sprite render so we can actually render some visual
+18:11
+sprite so we'll add a sprite renderer component and then from here we can drag in our
+18:17
+sprite we want to use which will be our paddle sprite you can see it show up now in the middle
+18:24
+and then from here we also want a couple other objects or components sorry we
+18:29
+want a rigid body 2d in this case because this is a 2d game a rigid body
+18:35
+is turning this into a physics object so this rigid body will allow us to
+18:40
+actually move the paddle we won't worry about the um the
+18:46
+different settings for this for now but we probably will change some of these later
+18:52
+the other component we want is a box glider 2d and the box collider is defining the
+18:58
+collision shape of our object so if we go to our scene you can see this green
+19:04
+outline is indicating the shape of the collision area i could technically
+19:09
+change this but we want to try to keep it exactly uniform with the sprite
+19:15
+you'll notice here the size is already set automatically based on the sprite which is nice so if you if you add your
+19:21
+sprite first and then your back slider it'll automatically size this to fit that sprite perfectly so that's pretty
+19:28
+convenient so that's really it for our paddle we should actually reposition it lower on
+19:35
+the screen we want it to be towards the bottom so we can go to our transform and just decrease our y value here i'm gonna
+19:42
+put this at negative eight a nice even number there and there's our paddle let's go ahead
+19:48
+and create another empty game object for our ball i'm going to kind of do the same process
+19:55
+let's reset the transform we're going to pretty much add those same components so we're going to add a
+20:01
+sprite renderer and i'm going to drag in our ball sprite for this one see her bowl shows up
+20:08
+i'm going to add another rigid body 2d we won't touch the properties of this
+20:13
+quite yet but we certainly will be changing some of these and let's also go and add a glider now
+20:21
+i'm not going to use a box collider for this one because this is a circle so i'm going to use a circle collider
+20:27
+instead now for you if you used a square or rectangular based sprite you might want
+20:33
+to use the box glider but depending on the shape of your ball um you can use the respective glider
+20:40
+so here once again circle one you can see the green outline fits perfectly around it it already sized the radius
+20:46
+for me based on the sprite and that's it for our ball and our ball can stay exactly where it is it'll just
+20:53
+start in the middle of the screen now from here we just need to add our
+20:58
+bricks and once again the bricks is where you get to be creative you can kind of customize the layout of them
+21:04
+however you want and you can change the layout of the bricks for each level and
+21:09
+i mean that's kind of what makes each level unique from the others i'm just gonna
+21:14
+start with a pretty simple like grid pattern and go from there
+21:20
+so first i'm going to create a new empty game object here that's going to act as a container for all of the bricks just
+21:26
+to keep it organized so i'm going to call this bricks i'm going to reset the transform to zero
+21:31
+and then within here i'm going to create a row which is once again just another kind of
+21:38
+empty container object to keep things organized and then within our row i will create a
+21:46
+another object which will be our actual brick so let's add brick there and we can
+21:52
+change or add some of the same components we did for the others so we want our sprite renderer
+21:59
+and we'll drag in a sprite for now this the actual sprite we use
+22:04
+you know this is going to vary based on um you know based on the state of the brick
+22:11
+but for now i'm just going to stick with let's say the blue one
+22:16
+and let's see what else um we want a box glider as well
+22:22
+we don't need a rigid body on these objects because these won't be moving
+22:27
+maybe for your game you might want them to move but for this tutorial we won't be handling that logic certainly
+22:34
+something you can do on your own and that would be actually pretty cool um but we're gonna just have some kind
+22:39
+of static brick so we still need a collider so the ball and the ball can actually bounce off of it and detect the
+22:45
+collision on the brick but we don't need a rigid body um and that's actually it for our brick
+22:52
+and so from here what i can do will actually be always gonna say i can duplicate this and then throw them all
+22:59
+over the place but i want to do one more thing before doing that
+23:05
+i want to turn this brick into a prefab a prefab is basically a
+23:11
+predefined assets a prefabricated asset that you can then reuse across your
+23:17
+project i'm going to have a prefab for what a brick is that way if i need to change
+23:23
+common settings that define what a brick is i can change it in one place and it
+23:28
+will update all instances of the brick so let's actually add a folder for the
+23:35
+our prefabs we'll call this prefabs and all i need to do to create a prefab
+23:41
+is to drag this into our project panel down here
+23:47
+and now we have a brick prefab and you can see here in the hierarchy it turned blue to indicate
+23:53
+that it's coming from a prefab
+23:59
+all right so there is our prefab now i can go ahead and duplicate this in our scene over and over again
+24:05
+so let's create let's see how many will we want on one row i'm gonna create three six
+24:11
+i'm gonna create seven of these on one rows three four five six seven
+24:17
+i'm just going to call all of these brick and we just need to space them out in a line
+24:22
+so let's start with um negative 12 already kind of did the math for this so negative 12.75
+24:30
+and then we do negative 8.5 and once again feel free to space these
+24:35
+out or lay them out however you want it really doesn't matter that's what is kind of the beauty of brick breaker
+24:43
+is every level can be completely unique um and then we just need to do the
+24:48
+opposite so four to five and then e5
+24:55
+and finally twelve seven five so there's one row of bricks now the great thing is
+25:00
+i can just duplicate this entire row so we can duplicate this row now i have
+25:06
+two rows and i'm gonna have five rows of bricks to start so three four five i'm gonna just call all these row
+25:14
+and let's just move them up a little each row will just be positioned a little bit different
+25:20
+um so maybe this bottom row will be here followed by let me look let's see four
+25:27
+point and then we want um 5.5
+25:34
+just trying to make sure my spacing is perfectly even and then this one will be
+25:40
+6.75 and then finally our last one will be
+25:45
+eight i believe yep there we go so there we go that looks pretty even we have all of our bricks set up
+25:52
+and the most important thing is that these are all stemming from a prefab so watch
+25:58
+if i change the sprite of this prefab let's make it gray it just changed all
+26:03
+of them which is great now i can still
+26:09
+change individual bricks if i want to and of course we will so like what i
+26:14
+want to do is actually define you know let's take this bottom row of bricks and let's make these blue
+26:21
+and then let's take the next row and let's make these green let's take the next row and make these
+26:28
+yellow and then let's do orange and do red
+26:36
+and what i'm going to end up doing later once we start coding our game is the different colors will indicate
+26:42
+how much health each brick has so this isn't necessarily required for the game but i
+26:48
+think it adds a whole new element to the game that really makes it fun which is
+26:54
+that each brick has health so what that means is let's say the blue bricks have one health the green bricks
+27:00
+have two health yellow three orange four and red five and so if you hit a blue brick it'll go
+27:07
+away it'll break immediately if you hit a green one it's going to reduce its health which
+27:12
+then turns it into a blue one and then you have to hit it again to break it and then etc so
+27:18
+basically the red you would have to hit five times and it's going to cycle through all of the different colors or
+27:23
+all the different sprites before it fully gets destroyed but this is a great start for our first
+27:30
+level here you know feel free to get real creative and decide how you want to lay out your
+27:36
+level one thing i forgot to do is we actually need one other thing added to our scene
+27:42
+here which is we need some walls that surround the entire area that way the
+27:47
+ball stays within the bounds so we can go ahead and create another
+27:53
+empty game object let's reset the transform i'm going to call this wall
+27:58
+and all it really needs is a box collider box collider 2d and let's go to our scene here we can
+28:05
+see it in the middle there we want to reposition one of these on each side of our um of our scene so i'm going to take
+28:12
+this first one let's do negative 18.5 i'm gonna just line it up as closely as
+28:18
+possible with this um edge of the edge of our camera there the white the
+28:24
+white is indicating the edge of our camera it doesn't have to be perfect i think that'll do the job i think
+28:30
+technically 275 275 18.275
+28:37
+is perfect and let's change our scale on the y-axis to make it bigger we'll just do 20. that
+28:44
+looks perfect let's duplicate this and let's swap it from negative to positive so we have one
+28:50
+on the right and then let's add one more let's duplicate it one more time this one we
+28:56
+need to scale on the x-axis and instead and all this will be
+29:02
+40 the size it doesn't actually have to be perfect so that's fine and
+29:08
+position this towards the top that looks good and let's add one more so duplicate that
+29:14
+one and we'll flip it to the negative all right so we just added our four
+29:19
+walls just kind of add those four walls make sure they're surrounding or seen this way the ball
+29:24
+always stays within the bounds of your scene i'm just going to rename all these to wall
+29:31
+and that's it now we can begin adding our first script other than our game manager and this is
+Paddle Movement
+29:37
+going to be for our player paddle so let's focus on getting our player paddle to actually move
+29:43
+let's go ahead and go to our scripts folder and let's add a new script called paddle
+29:49
+we're going to take this script and we're going to drag it onto our paddle game object drag this into the empty
+29:55
+space there you can also go through the add component but button as well
+30:00
+once that's there we can edit the script and let's go ahead and start getting our functionality here
+30:06
+as you saw me do earlier i like to kind of just start fresh and delete the things that aren't needed but
+30:11
+that's just my preference for our paddle we need to get a reference to the rigid body component
+30:18
+that exists on that same object because it's through the rigid body that we can actually move the paddle
+30:23
+so let's define a variable to store our rigid body in rigid body 2d i'm going to call this
+30:30
+rigid body and what i like to do is make this a public getter with a private setter that
+30:36
+way other things if they need they can say um other objects that are referencing the
+30:42
+paddle can access its rigid body but only this class can actually manage and
+30:47
+set that value or set this property here and then we have a little warning here saying this hides inherited members
+30:55
+because there's in old old versions of unity there is actually built-in properties um with
+31:01
+this exact same name they're no longer used they're deprecated but it still
+31:06
+gives this warning so we can suppress that just by adding the new keyword there
+31:13
+and so for here to actually assign our body we're going to do this in our wake
+31:18
+function and in awake we can say this dot ridge body equals get component and then we
+31:24
+specify the type of component we want to get which is the same as our variable here rigid body 2d
+31:31
+yep component is a function unity provides to us that will look it will search on this exact same game object
+31:38
+that our script is running on so our pedal script here and we can get any of these other components that exist on the on the on
+31:45
+this object so in this case we want our rigid body 2d and now with our rigid body we can
+31:51
+actually move our paddle to move the paddle though we need to check for input and we need to keep
+31:57
+track of the direction the paddle is moving based on that input so one need a
+32:03
+variable to know that direction so let's have a vector two called direction
+32:09
+we're gonna do the same thing here public getter private setter
+32:18
+and this will store the direction the paddle is moving which we will then move the ridge body by
+32:24
+so to check we need to set our direction based on input
+32:29
+and so to check for user input we will do this inside our update function this is a function unity calls for us
+32:36
+automatically every single frame that this script is enabled and this is where
+32:41
+you most almost always do your do your user input so we can say if
+32:47
+inputs we can access this input class unity provides for us and we can say get key
+32:53
+and we can specify the key code we want to use so let's say i'm going to use w a s and d so we can say key code dot a
+33:02
+and i can use the arrows as well so maybe i say or get key key code dot left arrow
+33:10
+and if that's the case we will set our direction equal to vector two dot left to indicate we're moving left
+33:17
+else if we press let's say input get key key code dot d
+33:24
+or input dot get key eco dot right arrow
+33:31
+we will say our direction is vector two dot right
+33:37
+and if we're not pressing either of those we will set our direction to be zero to
+33:43
+indicate we're not moving at all so that's checking for our input
+33:49
+and now we just need to factor this into a rigid body force
+33:54
+now when you're moving a physics object you should always do
+33:59
+that within fixed update fixed update is called automatically
+34:06
+by unity at a fixed time interval whereas update is called every single
+34:11
+frame fixed update is called at a fixed interval the reason this is important for physics
+34:18
+is because you don't want your physics to be dependent on the frame rate of your game
+34:24
+because then you might get very inconsistent results
+34:30
+so in fixed update we can actually add a force to our rigid body to move our paddle and we only want to add that
+34:36
+force if our direction is not zero so we can just first check if our direction
+34:41
+does not equal vector 2.0 then we can go ahead
+34:46
+and add we can say rigid body add force and then we can say
+34:51
+this dot direction now we should multiply this by a speed that way we can configure how fast our
+34:58
+paddle can actually move let's go ahead and add a variable called speed
+35:04
+and let's say by default this will be 30 is the number i tested and that gave me pretty good results
+35:11
+once again it doesn't matter and this you'll see we'll be able to actually customize this
+35:18
+value in the editor so we can completely change it if we want to we're going to take that speed and we're
+35:23
+going to multiply it by our direction we're scaling this vector by a scalar here which is our speed
+35:30
+and that's really it for our basic paddle movement let's go ahead and test it out
+35:37
+now remember from the beginning of video when we set up our scenes we actually want to run the game from our global i
+35:43
+guess for for this testing we're going to do it doesn't really matter but
+35:48
+maybe try to get in the habit of running the game from global because that's where um
+35:54
+that way it uses the the game manager properly so notice there's a couple weird things happening here which is that
+36:01
+our paddle just falls and the ball falls too even though we didn't do anything with the ball i can move which is nice i
+36:07
+can move this left and right which is good it's a little slippery it's hard to kind of come to a stop
+36:14
+so all of these things is just a matter of playing around with our paddles um rigid body properties
+36:20
+so for one there's gravity we don't want gravity so we can set this to zero to turn off gravity
+36:27
+angular drag has to do with rotation we don't want that we can set that to zero
+36:32
+and then the thing is pretty slippery it feels like i'm on ice and that's because our drag is really low we want to add
+36:39
+drag which will allow our paddle to slow down much quicker i'm gonna set that to five
+36:46
+and also the paddle feels pretty heavy it it kind of takes a lot of effort for it to start
+36:52
+moving but once it does start moving then it slips and slides like you're on an ice rink
+36:57
+um so the slipperiness we changed our drag but for the initial kind of heaviness we're
+37:03
+going to reduce our mass here and the these settings are you know you can customize
+37:09
+them to your liking it's really up to you to play around with and and change them
+37:14
+such that it feels good for for what you want um let's try this again
+37:21
+and like i said i should run this through the global scene but since we're just doing some basic testing here it
+37:26
+shouldn't actually matter and yeah there we go now notice how the ball
+37:32
+notice how the ball hit me and it knocked me down so let me get out of the way now it looks good though this feels
+37:38
+good it looks good but we do need to fix that problem the ball actually hitting me so what we can do is we can go to our
+37:45
+paddle and in the rigid body we can open the constraints here and we can freeze its
+37:50
+position on the y-axis we don't want it to move up and down we only want it to move left and right and we might as well
+37:56
+freeze the rotation too that way if the ball hits us it doesn't cause the paddle to rotate a little bit let's test this
+38:02
+out again the ball hits us yeah nothing happens i still stay exactly where i am and there
+38:08
+we go this feels really good smooth and pretty simple to implement
+Ball Movement
+38:14
+all right now that we've got the paddle moving let's focus on the ball next we're going to do very similar aspects
+38:20
+for the ball so let's go ahead and create a new script for our ball
+38:25
+c sharp script we'll call this ball we're going to drag this script onto our ball game object drag that over let's go
+38:33
+ahead and edit this one too just like i did before i'm going to kind of delete everything
+38:39
+just as my preference and let's get a reference to our rigid
+38:45
+body exactly like we did for our paddle so honestly we can even just copy this
+38:50
+same exact thing in our wake function we will establish our rigid body reference in
+38:58
+using git component and now for our ball we aren't going to be checking for input
+39:03
+or anything we just see simply need to add a force when it starts so we can add
+39:08
+our start function here and on start we want to add a kind of a
+39:14
+random force in one direction or another so
+39:19
+let's create a vector 2 that it will be the force we're going to add and this is
+39:24
+just going to start out at 0. and then we want to say
+39:29
+we we want the ball to go left or right randomly it it won't really matter if it goes left or right
+39:37
+so we can save force.x equals and then random.range
+39:42
+this is a class you need provides us to generate random numbers and we can say we want to generate a random number
+39:49
+between negative one and positive one and this way it'll kind of go either left or right or even straight down if
+39:55
+it ends up being zero for example and then for our y value this one we
+40:01
+always want to set the negative one that way it always goes down we don't want it to go up initially i mean maybe you do
+40:07
+but for me i'm gonna have the ball always go down and then anywhere left or right but
+40:13
+this will cause it to go in diagonals which will be nice um and then we just need to add this
+40:19
+force to our um to our ball over to the rigid body
+40:25
+and just like we did for our paddle we should multiply this by a scalar because
+40:31
+that by itself won't be enough so let's add a speed for this just the same
+40:37
+speed now for this one you know speed of our paddle was 30 this needs to be a much much bigger number because we're
+40:44
+only adding this force one time whereas our paddle it's kind of a constant thing where we continuously add
+40:51
+the force over and over again this is just you add it once on start so we need this to be a pretty large number so i'm
+40:58
+gonna set it to 500 and we can multiply our force here
+41:04
+um oh one thing we should do too is we should normalize this force
+41:10
+let's say for example you end up getting a value of one
+41:16
+um and then of course our y is negative one that will actually produce a vector that
+41:22
+is has a unit length bigger than one so it's actually going to cause the ball to
+41:27
+go like faster than it should so when we're working just purely with a
+41:32
+direction we don't care we don't want the vector to be scaled by anything we
+41:38
+want to have a unit length of one so we can normalize this which returns the
+41:43
+vector with a magnitude of one that's not really going to cause major problems but it's a good thing to do
+41:50
+regardless and from here the other small little
+41:55
+detail is i don't i want to have a little bit of a delay between when the ball launches
+42:02
+initially um and you kind of starting the game so i want to kind of delay this execution
+42:09
+just by like a second just so the player has time to kind of like you know kind of process that the game
+42:18
+is starting and it just you don't load the game and just instantly goes you know so there's an easy way to do this
+42:24
+in unity but first we need to take this code and put it into a new function so i'm going
+42:29
+to add a new function here and i'm going to just call this like set random trajectory
+42:37
+i'm just going to move this code down into there and all we need to do to delay this code
+42:44
+is say invoke which is a function unity provides to us and we need to provide the name of the function we want to
+42:50
+invoke which is going to be our random director trajectory there so name of and
+42:55
+then this function and then we can let's say invoke this after one second
+43:00
+so just creating a little tiny delay between when the ball kind of when the
+43:06
+game starts and then actually launching just to give the player some time to like ready themselves
+43:12
+and let's go ahead and test this out
+43:18
+all their speed 500 let's run it so there is some wonky behavior there so
+43:25
+a few things for one we want to turn off gravity on our ball just like we did for our paddle so we can turn off gravity
+43:31
+we're also going to want to change some of those same other properties on a rigid body we're going to want to freeze its um freeze
+43:38
+its rotation we don't really care about the ball rotating and we can change our angular drag to zero
+43:46
+the linear drag we actually want to keep at zero because we don't want the ball to slow down we want the ball to
+43:52
+maintain a consistent speed the entire time so we want to have no drag at all
+43:57
+and the mask is fine we can keep the mask how it is you can change it if you want of course
+44:03
+if you want to give it a little bit of a different feeling but there you go this looks good and so you can see when i start the game it'll stay
+44:09
+there for a second and then it launches randomly and it kind of goes in a random direction
+44:15
+now you can obviously see one problem here is that the ball doesn't actually bounce off of the paddle it just kind of hits it and floats the side which is is
+44:22
+not really good so we need to fix that and all we need to do is add a physics material to the ball to make that
+44:29
+material more bouncy and so we can add a asset for this but
+44:35
+let's create a folder i'm just going to call this folder like physics maybe and in here we can right click create
+44:43
+and we can do let's see where is it physics material 2d and i'm going to just call this bouncy
+44:50
+and then in our specter here there's two values friction and bounciness we want zero friction and we want full
+44:57
+bounciness so these are values between zero and one so no friction and 100
+45:02
+bounciness which is value one and now when we drag this um bouncy
+45:08
+physics material into our rigid body see what happens now
+45:15
+and there we go it actually bounces any time it hits something it will actually bounce off which is pretty convenient
+45:22
+and there we go there's our basic ball movement
+Bounce Reflection
+45:28
+the next thing we want to do is improve the interaction between the ball and the paddle this is something i did not do in
+45:36
+my original pong tutorial and this is something i want to correct here because
+45:41
+it really does add it makes the feeling of the ball bouncing off the paddle a lot better and
+45:48
+it gives the player a little bit more control so what should happen is the ball is
+45:53
+going to bounce differently off the paddle depending on where on the paddle it hits it
+45:59
+right now just using the bouncy physics material makes it really easy to just
+46:04
+get perfect reflections where if it comes in at an angle it's going to perfectly bounce off at the opposite
+46:11
+angle the angle of reflection we want it so we can actually kind of
+46:16
+change that depending on where the ball hits so if it hits all the way on the left side it might cause it to go more
+46:21
+left or or etc on the other side so let's go ahead and go to our paddle
+46:27
+script and we're going to handle this behavior and this will probably be the the most difficult aspect of this
+46:34
+tutorial because it's really just a lot of math to kind of get right
+46:39
+but first we need to detect when the ball actually collides with the paddle
+46:44
+to do that in unity we will add a function called on collision enter 2d
+46:51
+and then this has a parameter called 2d or collision 2d and then we can just name this collision for example
+46:59
+this allows us to detect when some other object has collided with our paddle in this case
+47:06
+so we need to make sure the thing that is colliding with the paddle is the ball and not some other
+47:11
+object so one way we can do that is we can try to get a reference to the ball on the on the object that collided so we
+47:19
+can say collision.gameobject.getcomponent ball
+47:25
+and if this is not null then that means yeah indeed this object was the ball and
+47:32
+it wasn't something else if we don't find the ball if get component doesn't find it well
+47:38
+and the ball will be null which means we collided with something else and we don't care in that case
+47:45
+all right so to do this we need to essentially detect um
+47:50
+where on the paddle the ball hits relative to like the middle point so like how much like what is the offset
+47:57
+from the ball hitting um from the middle that's where we're gonna start
+48:02
+so first we need to get the position of the paddle that way we can then get the position of the kind of the contact
+48:08
+point and then we can calculate the difference between them so for our paddle position this is
+48:14
+pretty simple because um we just have it right away we can just say
+48:20
+this dot transform that position for our contact point the contact point
+48:26
+of where the ball actually hits on the paddle we can access that through our collision
+48:32
+data here so we can this will be a vector 2 and we'll call this contact point we can say collision.getcontact
+48:40
+and then we need to specify the index because there could technically be multiple points of contact we really
+48:47
+only care about the kind of the first point of contact and then
+48:52
+we will say dot point to get the actual position there now from here we can calculate the
+48:58
+offset so from the position of the paddle which will be the very middle and then to where the ball actually hits we
+49:05
+can get that that offset there so this will just be a single value a single float here
+49:11
+because we only care about it in the x-axis so we'll say paddle position dot x
+49:16
+minus contact point oops contacts point dot x so that gives us our offset
+49:24
+and then we're gonna essentially treat this as a percentage so we need to know like
+49:29
+you know if it was all the way on the very left edge that would be like
+49:34
+negative 100 whereas if it's on the all the way on the far right edge that would be like
+49:39
+positive 100 so to get a percentage we need to know the
+49:45
+total width of our paddle um we kind of need to know what we need to
+49:51
+know half of the total width of our paddle right if you think about okay let's say half the width let's just make
+49:57
+up a number is 50. and then our ball
+50:02
+hits at like negative 40. you know so negative 40 divided by 50
+50:08
+that gives us you know eighty percent or negative eighty percent
+50:14
+because four fifths right same thing on the other side if it's positive it would just be positive versus negative and so that gives kind
+50:21
+of the percentage of where on the paddle it hit so we need our max width or our we'll
+50:28
+call this yeah we'll call this width um [Music]
+50:33
+yeah we'll just call this width and this is going to be the size of our
+50:39
+paddle we can only get the size of our paddle through the collider so to access
+50:44
+that we can say collision dot collider although the collision dot collider is
+50:49
+our balls collider so we actually want other collider which is kind of counter-intuitive you
+50:54
+would think other clyder would be the ball but it's not other collider in this case is actually the paddle
+51:01
+so collision.othercladder.bounds.size.xx
+51:07
+being the width you know along the x axis and then like i said we only want
+51:12
+um since we're going to treat this as like from negative 100 to positive 100
+51:18
+we only really need half of the width so we'll divide this by two
+51:25
+and now we can calculate an angle you can take all of this information and
+51:31
+calculate an angle then calculate a rotation and then have the ball actually
+51:37
+um redirect along that rotation so the angle here let's say current angle
+51:43
+so this can be the current angle of the ball we can say vector 2 dot signed angle and
+51:49
+we want to be signed because we want it to be positive or negative so signed angle
+51:57
+and this will be vector 2 dot up and then whatever the direction of the ball is so
+52:04
+ball that rigid body dot velocity velocity that's going to give us the actual direction of the ball
+52:10
+[Music] it gives us its direction and speed velocity is direction time speed but in
+52:16
+this case when we calculate this it's basically just being treated as a direction
+52:22
+[Music] so this gives us the current angle the ball is actually moving relative to our
+52:29
+um y-axis and then we can calculate our bounce
+52:35
+angle so the the angle we actually want the ball to bounce balance angle
+52:40
+this is going to be that percentage so to get that percentage we do offset divided by width
+52:47
+and then we can times this by some essentially maximum value so
+52:54
+this is essentially a percentage negative 100 percent positive 100 percent we can specify like what is the maximum
+53:02
+angle we want the ball to go and we can actually make this a variable so we can say public float max bounce angle and
+53:10
+maybe the max balance angle is like 75 because you probably don't want it to be like 90 because then it would just like
+53:16
+literally go flat so maybe we will make sure that it never will exceed like 75 degrees
+53:23
+and so by timesing our percentage by this max balance angle it guarantees
+53:29
+that it won't ever exceed it um okay so there's the current angle of
+53:36
+the ball the kind of desired angle of the ball and then we can get kind of our our
+53:43
+final like new angle the ball will go so we'll call this new angle
+53:48
+and we need to make sure that we're we're going to take the current angle plus the bounce angle that's basically
+53:54
+all it is however we need to make sure that it doesn't exceed the limit we
+53:59
+specified here so let's just start by saying current angle
+54:05
+plus bounce angle and then to make sure it doesn't exceed we can clamp this value within a range
+54:11
+so we're going to actually take this here and we're going to say mathf.clamp
+54:17
+we're going to paste that in and then we specify a min and max that we wanted to clamp within just to
+54:23
+guarantee it doesn't ever exceed and that will be this value and then it'll be negative or positive
+54:28
+so negative max bounce angle and positive max balance angle
+54:36
+and then finally once we have our new angle of the ball
+54:41
+we can actually form a rotation from this rotations are typically represented with something called quaternions which
+54:48
+i'm not going to kind of get into the math behind those because it's pretty complicated but a lot of times rotations
+54:54
+are represented with quaternions and we can say quaternion.angle axis this will allow us
+55:01
+to form a rotation given an angle which we have so that's our new angle so
+55:06
+we can go ahead and plug that in right away and then we need to say an angle along which axis
+55:13
+and this will actually be the forward axis because we want the ball to rotate in whatever it's forward direction would
+55:20
+be [Music] and now we just need to update our balls rigid
+55:27
+body um to go in this new along this new direction
+55:33
+so we will say ball rigid body velocity and we're going to take that rotation
+55:40
+we're going to multiply it by vector 2 dot up just like we did over here because we want it to be relative
+55:47
+to the up axis you know essentially if you think of the screen is like
+55:52
+you know 180 degrees on the side zero degrees
+55:57
+going up you know where where does it fall into that you know you can kind of think to some trigonometry
+56:04
+and their unit circle and think okay like negative 180 degrees positive 180 degrees
+56:09
+where kind of on the unit circle is it going um so that's why it's relative to the
+56:15
+y-axis here which is vector2.up [Music]
+56:20
+and we just want to make sure our ball maintains the same velocity it had previously we don't want to change the
+56:27
+velocity we just want to redirect the direction so remember velocity is
+56:33
+actually direction time speed to just get the speed of the ball we say
+56:40
+all dot rigidbody.velocity.magnitude that's magnitude is really just the speed
+56:47
+and so new angle or which is for a new rotation
+56:52
+which is formed by the angle relative to the y-axis and then scaled by this this existing speed of
+56:59
+the ball so this is i know this is very complicated um it's
+57:04
+it's a lot of math that might be hard to understand um so as i said that's definitely going
+57:10
+to be the hardest part of this tutorial it's not even technically required like you don't have to do this but it does
+57:16
+give the ball some better interactions so notice how notice how there the ball
+57:21
+came and it hit ex like pretty close to the right edge and so that caused the angle to go more to the right
+57:29
+whereas let's run this again and i hit more towards the middle there
+57:36
+and because it hit more towards the middle it had a more um kind of just normal reflection it had a kind of a
+57:43
+normal bounce like you would sort of expect
+57:48
+notice there the ball was actually going towards the left but i hit on the very
+57:53
+right edge which caused it to actually end up going back to the right and that's that's the
+57:59
+cool thing with this interaction is you can really get more control over the ball so it becomes a little bit more
+58:05
+skillful because if you know you want you you're trying to hit a brick over on the right side
+58:11
+well you can try to line the ball up exactly on the paddle where you want
+58:17
+um so it it essentially takes the different angle the the angle the ball is currently moving and it kind of
+58:23
+factors in the angle of where on the paddle it would hit you
+58:29
+know like if you hit all the way on the right it's going to be a pretty steep angle to the right or if you hit all the way on the left
+58:35
+it's going to be a pretty steep angle to the left if you hit more in the middle it'll be pretty pretty straight pretty
+58:40
+normal and then it adds that to whatever the current angle the ball is and that produces your new result
+58:48
+and so there is our kind of cool ball um ball physics there
+Brick States
+58:55
+we have a couple things left to do for our game here the next thing we want to focus on is
+59:00
+our bricks let's actually make sure our bricks can lose health as
+59:06
+you hit them and then get destroyed and then the final thing we'll do after that is our game state so you can actually
+59:13
+advance to the next level lose potentially of course and so on
+59:19
+so let's create a strip for our brick i'm going to just call this brick
+59:26
+and if you remember that prefab we created for our brick we want to select that and add our
+59:34
+script to that prefab because if you remember if we change the
+59:39
+prefab it'll change everything so now if we look in our scene here every one of our bricks has that script
+59:45
+on it because we added it to the prefab that is really convenient
+59:51
+let's open this script up and let's start coding this so for our brick we want to keep track
+59:58
+of how much health it has and reduce that every time it gets hit we can also specify how many points the
+1:00:05
+brick is worth when you get it that way you can increase score and things like that um so let's define a variable for how
+1:00:12
+much health the brick has [Music] so be an integer will cause health
+1:00:18
+and this is not a configurable variable this is just the current how much current health it
+1:00:24
+has so we're going to keep track of this ourselves so we want to make this a private setter that way it can't be
+1:00:31
+changed externally we do want to change the sprite being
+1:00:37
+rendered for the brick as it gets hit so remember what i want to do is for the red that would have
+1:00:43
+essentially five states red orange yellow green blue and so every time you hit it it goes to the
+1:00:49
+next state so we need to swap out which sprite is being rendered every time we hit the hit
+1:00:55
+the brick which means we need a reference to the sprite renderer on this brick so very similar to what we've done
+1:01:02
+in our other scripts where we get a reference to the ridge body we're going to basically do the same thing sprite renderer sprite render we'll call
+1:01:08
+that and this will be probably get our private setter and we can establish our
+1:01:15
+reference to this in our wake just like we've done elsewhere get component sprite renderer
+1:01:23
+very similar to what we've done for our bridge bodies now within here
+1:01:29
+we need to actually make sure we're setting the correct sprite on our
+1:01:34
+renderer based on the health of our brick
+1:01:39
+so in our start function we should make sure our sprite is
+1:01:45
+initially getting set however we don't know which sprites to use there's no
+1:01:51
+we're not referencing the sprites we should use at all so that's actually the the configurable var value we want to
+1:01:58
+add here which is what are the different states where and the states being like a sprite essentially
+1:02:04
+so we can specify an array of sprites i'll just call these states
+1:02:11
+um yeah it'll just be an array of sprites here called states and this is what we'll
+1:02:17
+we'll use so health is essentially going to almost be treated like an index to then know which sprite to pull
+1:02:24
+and then that will get set on our renderer um
+1:02:29
+one other thing i probably want to add is in brick breaker there are some bricks
+1:02:35
+that can't be destroyed they're like steel bricks or metal bricks that the ball will bounce off but
+1:02:41
+you can't actually break them so we might want to have a variable called like unbreakable
+1:02:47
+which allows us to flag a brick as being unbreakable that's a convenient thing to have
+1:02:54
+all right so in our start function if the brick is not unbreakable we
+1:02:59
+should make sure we're updating the sprite correctly [Music]
+1:03:04
+the initial amount of health the the brick will have will depend on how many states there are so we can say
+1:03:11
+this.health equals however many states there are if you have five different states we're going
+1:03:16
+to say that brick has five health and then from here we can say sprite renderer dot sprite
+1:03:22
+and we can look up in our states based on our health so we can say this dot sprites oops this dot or states the set
+1:03:29
+states and we can grab a given state at a certain index that index will be our
+1:03:35
+health however health is from you know one two three four five for
+1:03:41
+example indexes start at zero so we need to subtract one from this to put it in
+1:03:46
+the right range and that is kind of the core of our code
+1:03:52
+we don't want to do this for the unbreakable ones because they're never going to their sprite will never change
+1:03:58
+it's always going to be consistent um and before we move on i want to make
+1:04:03
+one caveat here which is if you are implementing this without custom sprites
+1:04:09
+so maybe for example as i indicated earlier you're just using like the default kind of built-in sprites
+1:04:17
+it would you know these are all then going to be the same for every brick so it wouldn't really make sense to have um
+1:04:24
+different your states being different sprays because it's all the same spray so what
+1:04:29
+you could do if if you are doing it that way is you can change this from sprite to
+1:04:35
+maybe color and then here instead of setting the sprite render sprite you can set the
+1:04:42
+color instead that way if you're using the exact same sprite for everyone this is essentially
+1:04:49
+going to tint that sprite based on the color that's another way you can do this
+1:04:55
+but since i am using custom sprites i'm going to have mine set up as sprite
+1:05:00
+all right so from here we need to determine when a the ball hits the brick we should reduce
+1:05:07
+the health and then basically reset the sprite so just like we did for our paddle on
+1:05:14
+collision enter 2d let's go ahead and copy that same function there
+1:05:19
+this is how we determine if some other object has collided with our brick and let's check which object actually
+1:05:25
+collided so we can say if collision gameobject dot name
+1:05:32
+and i could do what i did here where i get the component
+1:05:37
+i don't actually need to get the component though because i'm not accessing any data from it you know here
+1:05:42
+we use git component because i needed to actually access the rigid body on the
+1:05:48
+ball here i'm not going to actually need to access any of the properties on the ball so i could just compare the name
+1:05:54
+it actually might be better to do git component it's a little bit safer and can prevent errors but
+1:06:00
+for simplicity i'll just compare the name if the object we're cladding was name is ball well then obviously we
+1:06:06
+glided with the ball um and if you collide with the ball let's call a function maybe called it
+1:06:15
+so in other words the brick was hit and we'll call that function when the ball hits the brick
+1:06:21
+so in hits um we should reduce the health of the ball so we can say health minus minus
+1:06:29
+although first we only want to do this if it's not unbreakable right so if if this
+1:06:36
+brick has been marked as unbreakable we can just return out of the function immediately just don't execute any of
+1:06:42
+this other code all right so the brick gets hit the health gets reduced and then at this
+1:06:49
+point we need to update the sprite renderer just like we did here we can literally just copy this same line of
+1:06:54
+code however what happens if the health is zero
+1:07:01
+now if the health is zero we actually want to just turn off the brick entirely we're gonna hide the brick because it's
+1:07:07
+basically been destroyed so we can say if health is less than or equal to zero
+1:07:12
+then we will just completely turn off the game object and this is accomplished by saying this
+1:07:19
+that game object set active and then false if the house health is greater than 0
+1:07:25
+well then we will update the sprite [Music] and that is really it for our brick here
+1:07:34
+we missing anything um i think that's good we need to actually
+1:07:41
+set what these states are in the editor so let's go ahead and do that so if we go to our prefab for our brick
+1:07:48
+here is our brick component we've got states we need to actually assign these so let's give it all five states um and
+1:07:57
+we'll say blue and let me think of what is the order of these i don't remember
+1:08:02
+it should be well if the health is five yeah so it should be from like blue
+1:08:10
+green i wasn't sure if it should be like you know the opposite order but no blue
+1:08:16
+green yellow orange and red so that is the default for our prefab
+1:08:23
+which gets applied to everything however of course our bricks are different where these
+1:08:29
+first bricks here on the bottom row only have one state so we can just set this to one and now they only have that
+1:08:35
+one state which means in the code it'll just set their health to one for the second row we're going to say it
+1:08:41
+only has two states for the third row it's going to have three states
+1:08:47
+fourth row it will have four states and the fifth row has the five states per the default so we're good there let's
+1:08:53
+see what happens we run the game the ball launches
+1:08:58
+boom that brick got destroyed because it only had one health notice that brick turned blue because it has two health so it cycles down to the next state and so
+1:09:06
+on let's try to hit one of each color just to verify so yell yellow goes to green
+1:09:15
+and this looks to be working might not just for the second time i might not actually try to hit each of
+1:09:22
+the colors but no reason to believe it's not working so this is good oh there we go perfect it
+1:09:28
+got to the top and notice how there we go i mean this is great this is exactly what we wanted
+Scoring
+1:09:35
+all right we're almost done with the game we just need to tie everything together so the things we're missing is scoring
+1:09:42
+and lives are the main two things and then of course um checking if you've
+1:09:49
+cleared the level so we can advance to the next level so let's just start with scoring that
+1:09:54
+one's a little fairly simple so let's go ahead and open our brick
+1:09:59
+script and let's add a new variable here to keep track of how many points this brick
+1:10:05
+is worth and let's say maybe by default it's worth 100 points and this is going to be every time you
+1:10:11
+hit the brick so for the bricks that have five states that would in total be worth 500 points
+1:10:18
+um if you want to do it differently and feel free i'm just going to kind of keep it simple and every time you hit the
+1:10:23
+brick it'll be worth 100 points or however many points you specify [Music]
+1:10:28
+so here when we hit the brick we need to inform our game manager that this brick was hit so the game manager can update
+1:10:35
+the score so let's add a function to our game manager and we need to make sure this is
+1:10:41
+public because we need to be able to access it from a different from a different class
+1:10:47
+now i'm just going to say that call this hit and i'll pass in the brick that was hit
+1:10:54
+all right and so from our brick script when our brick gets hit we will get a
+1:10:59
+reference to our game manager and we'll call that function and then we need to pass in the brick which is this
+1:11:06
+this is the brick that was hit and then from here our game manager can decide what to do when a brick is hit so
+1:11:13
+mostly which is to update our score so this dot score plus equals brick dot however many
+1:11:20
+points it's worth and let's go ahead and test that out
+1:11:28
+and we're going to get an error here and i'll explain why in a second as soon as it hits a brick we're going
+1:11:33
+to get an error there we go we got an error here null reference exception on line 39 on our
+1:11:40
+brick script so that's that new line of code we just added this is implying that our game manager is null it can't find a
+1:11:48
+reference to our game manager so why why not why can't it find a reference to the game manager
+1:11:55
+well it's because there's there is no game manager in our scene it doesn't exist
+1:12:00
+and that's because our game manager exists in our global scene in our in the global state that persists across all
+1:12:06
+the game exists in there and i made the mistake of running the game
+1:12:11
+directly from level one rather than running the game from our global scene which will load level one
+1:12:19
+now the other thing you can do for example maybe you're testing level 10 or something and thus you want to just skip
+1:12:25
+straight to level 10 you can still open that level directly and then just make sure you
+1:12:31
+load that global state right so you can drag in that scene that way both will be
+1:12:36
+loaded and so now here when i run it i can hit one of these bricks and it's
+1:12:42
+not going to cause the error and we can look here let's click our game manager yeah we can see our score
+1:12:48
+is updating every time we hit a brick so that one's pretty straightforward
+Player Lives
+1:12:55
+next let's keep track of how many lives the player has well the game manager is
+1:13:00
+keeping track of that but we need to actually update that value and so anytime the ball hits this very bottom
+1:13:06
+wall here that implies that they have missed and therefore they should lose a life
+1:13:13
+so we need to somehow detect when the ball hits this bottom wall and then inform the game manager that they have
+1:13:18
+lost a life let's go ahead and add a script and let's just call this like
+1:13:26
+miss zone maybe um yeah i'm not really sure what to call it
+1:13:31
+miss zone dead zone out of bounds something like that we can add this script just to our
+1:13:37
+bottom wall let's go ahead and edit this in this script all it needs to do is
+1:13:44
+um uh it just needs to respond to our on collision enter 2d function
+1:13:50
+so honestly i'm just going to copy this because it'll just save some time
+1:13:55
+on collision enter 2d same parameter collision 2d
+1:14:00
+same check here if the the thing we are colliding with is the ball so in
+1:14:06
+other words if if our bottom wall here is colliding with the ball well then that means we've
+1:14:11
+missed and we need to inform the game manager that we have we've missed and that thus the game manager can update
+1:14:17
+the lives and so on so just like we did for our brick we're going to kind of do the same thing where
+1:14:23
+we will find object of type game manager and then we will call a different function
+1:14:28
+instead of hit we will call let's say um we'll have one called miss
+1:14:36
+and make sure this is marked as public as well because we need to call it from a different class so in order to access
+1:14:42
+it it needs to be public there are no parameters so we don't need that
+1:14:48
+and there we go so that that's actually all we need for the script it's just very simple it's just kind of been going
+1:14:55
+telling the game manager hey this thing has happened um and now from here well let's decrease
+1:15:01
+how many lives we have so lives minus minus
+1:15:06
+and then we need to determine well are you out of lives if you're out of
+1:15:11
+lives it should be a game over and if you're not out of lives it needs to restart the
+1:15:17
+level so we can add a check for that [Music]
+1:15:22
+if lives is still greater than zero we will reset the level
+1:15:28
+um let's add a function for that reset level i'll put this right underneath load
+1:15:34
+bubble and if your lives is not greater than
+1:15:39
+zero that means you run out and thus we get a game over so let's add a function for game over
+1:15:51
+um so let's start with game over for game over you might want to do
+1:15:56
+something like load your game over scene so maybe you've created a scene that is specifically for game over that displays
+1:16:02
+some ui or something else so we could load that scene directly say something like game over scene right that's one
+1:16:09
+option for me i'm not gonna actually go and create all that scene just for the sake
+1:16:16
+of time so i'm just going to restart the game and so all i need to do is say new
+1:16:21
+game that's it but like i said normally speaking you'll probably be you'd probably do something like this where
+1:16:28
+you load your game over scene your game over scene says you know you know try again maybe there's some
+1:16:34
+buttons on there to to start over and then eventually you're probably gonna
+1:16:39
+be calling new game you know maybe when you click one of those buttons but for the second time i'm just gonna
+1:16:44
+directly start a new game over whenever you lose completely now when you reset the level we need to
+1:16:53
+um reset three things potentially we need to reset the ball we need to reset the
+1:17:00
+paddle and then optionally you can reset all the bricks i think personally i'm not going to
+1:17:06
+reset the bricks when you when you lose a life the bricks will still maintain their current state but we will reset the ball
+1:17:13
+and paddle those two are kind of required so let's pretend we have a function on
+1:17:20
+our ball um called reset ball as well as a function on our paddle
+1:17:27
+called reset paddle now there's a couple problems here for one
+1:17:32
+we don't have a ball and we don't have a paddle our game manager does not have a reference to these two things
+1:17:39
+and that's why we're getting these errors and then even if we do have a reference to those these functions don't
+1:17:45
+exist so we need to fill everything out to get rid of these errors so first let's try
+1:17:51
+to get a reference to our ball and paddle we can add some variables for these
+1:17:57
+ball ball we're going to make this a public getter with a private setter
+1:18:02
+same thing for our paddle
+1:18:07
+and normally speaking we would grab references to these in awake however
+1:18:12
+that won't work here because our game manager exists in our global state scene
+1:18:19
+whereas the ball and paddle exist on each level so if we try to do it in a wake these
+1:18:26
+things won't exist so we need to get get a reference to these after you have loaded a level so
+1:18:34
+we have our load level function from earlier after we load the level that's when we
+1:18:40
+need to set these references now we can't just do it on these next lines it won't work
+1:18:46
+what we need to do is we need to subscribe to an event that unity offers which is there's an event
+1:18:54
+you can subscribe to any time as seen has been loaded then you can do things
+1:18:59
+um so what we can do is in our awake function is not where we'll get the references but we will subscribe to this event and
+1:19:06
+it's called c manager that's scene loaded and then you need to provide a function
+1:19:12
+that's going to be get that will get called when the scene when anytime a scene is loaded
+1:19:17
+let's actually add that function i'm going to add it right below load level doesn't really matter where you add it
+1:19:23
+but i'm gonna call this on level loaded
+1:19:28
+and this requires two parameters it requires the scene that was actually loaded
+1:19:33
+and it requires the mode in which it was loaded so those are just required in order to actually subscribe
+1:19:40
+to this and then the way in which we actually subscribe is we say plus equals and then our the name of our function
+1:19:47
+here so some pretty cool syntax there so this function is going to get automatically called any time a scene is
+1:19:54
+loaded and this is where we can then establish our reference to our ball and paddle so
+1:20:00
+just like we do elsewhere we can say find objective type ball and same thing for our paddle find
+1:20:07
+objects of type paddle
+1:20:13
+all right great so we fixed the first error of not having references to those two things but now of course we don't
+1:20:19
+have um we don't have a reset ball function and we don't have a reset paddle function
+1:20:25
+let's go into each of those scripts and add those functions let's start with our ball
+1:20:31
+let's go ahead and add this function and it needs to be public because we're going to be accessing it from a
+1:20:37
+different class so we're going to call this reset ball and reset ball should do the same thing
+1:20:43
+start does so we can just take what happens and start and move it into here and then we'll call reset ball from
+1:20:50
+start so and then reset ball sets the random trajectory after a one second delay
+1:20:57
+um so same thing that happens on start we will do here so that one's fixed although
+1:21:04
+there's actually more we need to do in here we don't need to just
+1:21:10
+um set a new random track trajectory we also need to reset the ball back to the starting position so we can say this dot
+1:21:16
+transform that position equals vector 2.0
+1:21:22
+so that's our our origin starting point and then same thing for our rigid body's velocity we're going to set that back to
+1:21:28
+zero as well we're just kind of resetting everything and then calling a random trajectory again just like we
+1:21:34
+were previously doing in start that's our ball that one's fixed no more
+1:21:40
+errors now let's do the same thing for paddle right now there's nothing really
+1:21:45
+happening on start for the paddle then that's okay but we can add our function here called
+1:21:50
+reset paddle and for our paddle we basically need to do the same thing where we reset its
+1:21:56
+position and velocity so this.transform.position now in this case
+1:22:02
+we don't want to set this to zero because that would put the paddle in the middle of the screen we only want to reset the x-axis not the y
+1:22:09
+so we can say new vector 2
+1:22:15
+and we will reset the x to zero but we will maintain the y we'll keep the y just whatever it
+1:22:22
+currently is and then just like we did for the ball we'll reset our velocity to zero as well
+1:22:29
+so that's resetting the paddle resetting the ball and both of those errors are fixed so
+1:22:36
+there is our reset level function and like i said it's up to you if you want to reset the bricks
+1:22:43
+um you would basically do the same thing i'll i'll show you how to do this we'll
+1:22:48
+go ahead and do it just for the sake of it but we would need a reference to all of our bricks
+1:22:53
+now this will have to be an array because you're gonna have multiple bricks so we'll establish our variable here
+1:23:01
+an array of bricks we will assign that when the level is loaded
+1:23:10
+find object of type this should be objects it should be plural since this is an array
+1:23:16
+and then here we can say well we'll have to loop over every one of our bricks so we can set up a for loop
+1:23:23
+this dot bricks.length i plus plus and we can say bricks
+1:23:29
+i dot reset brick
+1:23:36
+once again this function doesn't exist yet so let's go ahead and add that um let's go ahead and add our reset
+1:23:43
+brick function to our brick script and we're going to just take the same code that currently exists and start
+1:23:50
+we're going to bring that down and then we'll call reset from here the other thing we probably should do is
+1:23:56
+make sure that we're turning it back on um because it could get set to fall so we
+1:24:03
+should make sure it gets returned on again um and that's it so that's how you would
+1:24:08
+reset all of the bricks if you wanted to i'm i don't actually want to do that so i'm just going to comment that code out
+1:24:16
+but that's how you would do that let's go ahead and test this um
+1:24:22
+but yeah let's go ahead and test this and see what happens
+1:24:30
+so let's hit a couple bricks we can look at my lives is three
+1:24:36
+currently let's hit one more brick i'm gonna go all the way to the right of the screen the ball's gonna then
+1:24:43
+hit the yep so there we go um the paddle got reset to the middle the
+1:24:49
+ball got reset to the middle our lives decreased to two let's make sure the ball still
+1:24:54
+yep so the ball still goes after a second so everything is good there everything gets reset
+1:24:59
+so that's how we can handle lives all right the final thing we need to do
+Level Completion
+1:25:04
+is just check if you've cleared the entire board so we can advance to the next level
+1:25:10
+so in our game manager any time we hit a brick so we when we did our
+1:25:17
+scoring we added the function to to handle when you hit a brick anytime you hit a brick we need to verify if you've
+1:25:23
+cleared the board so let's go ahead and add a function to to check for that this function is going
+1:25:29
+to return a boolean it's going to return true or false of whether you have or have not cleared the board we'll call
+1:25:35
+the function cleared we're going to call that from our hit function so if you've cleared
+1:25:42
+then we need to advance to the next level how do we advance the next level well we call our load level function
+1:25:50
+we take our current level and say plus one so now we just need to implement this
+1:25:56
+function how do we determine if you've cleared the board well
+1:26:01
+if you remember in our brick script when a brick is actually broken
+1:26:06
+it gets turned off so if every brick in our scene is inactive
+1:26:13
+well then that means you've cleared them all so we can loop through all of our bricks
+1:26:18
+and check if they're all inactive and just previously when we were doing our lives we added our reference to all
+1:26:25
+of our bricks here so we added our our array of bricks we establish our we find the references
+1:26:33
+to all the bricks anytime a level is loaded and now we can use that to loop over it
+1:26:40
+for i equals zero i is less than bricks dot length i plus plus
+1:26:46
+and we can say if this dot bricks i so we're going to look at each brick in
+1:26:52
+the array if this game object is active in hierarchy
+1:26:58
+this is checking if the game object is active because we're determining um or
+1:27:04
+we're setting them to be inactive when they get destroyed so this says if if this brick is active
+1:27:11
+well then we immediately know you've not cleared the board if there's a single brick that is active well then you
+1:27:17
+haven't cleared the board so we can immediately return false to say nope you have not cleared the board
+1:27:23
+and if it if it ends up looping through the entire array without ever returning false well then that must mean you
+1:27:30
+we should return true that must mean all the bricks are inactive unless you've cleared the board
+1:27:35
+now there's one caveat to this which is that what about our unbreakable bricks if you
+1:27:41
+mark a brick as unbreakable it's never going to get destroyed and thus it'll never get set to inactive and then this
+1:27:49
+will never end up returning true because there'll always be those unbreakable bricks that are still active
+1:27:55
+so all we need to do is add an additional check here to basically ignore any brick that's marked
+1:28:00
+as inactive so we can say it's
+1:28:06
+it's active in the hierarchy and it's not unbreakable you know then then we're good so
+1:28:12
+basically we're just ignoring the unbreakable ones um if it is unbreakable this just gets skipped and we move on to
+1:28:18
+the next brick um let's go ahead and test this out
+1:28:24
+and see what happens then yeah we already added our load level so let's verify that this works
+1:28:30
+and just for the sake of time i'm going to turn off um
+1:28:36
+most of these rows just to save just to make it quicker i have level one loaded let's
+1:28:43
+actually just load the game like normal from our global scene this will load level one
+1:28:49
+the game starts let's destroy all of these bricks real quick
+1:28:55
+we can see we're on level one
+1:29:01
+three more bricks to go
+1:29:06
+two more i hope i missed i made it go too much to the other side let's try to cut it back there we go perfect
+1:29:13
+and got to get that one all the way over there oh that might be good not quite
+1:29:20
+try to make it go back to the right there we go that should be good oh just
+1:29:26
+barely missed i get this right
+1:29:33
+come on we can do it just just barely missing
+1:29:41
+[Music]
+1:29:48
+oh that could work i don't know all right i'm just failing at this right now
+1:29:53
+wasting time with that hit nope
+1:29:59
+just trying to cut it back oh there we go i slowed the ball down which is a little bit of a bug but that's okay
+1:30:06
+okay this is actually like taking too long can i just like cheat and bring the ball to um
+1:30:11
+maybe i'm able to cheat let's cheat a little bit and just have the ball boom the ball hit
+1:30:18
+and if we look here let's pause our game level two is now loaded
+1:30:24
+so we're on level two so it did advance the next level our game manager is still here our game manager indicates we're on level two now
+1:30:31
+great now i'll see level two like it's empty scene because i haven't done anything in level two so this will be up
+1:30:38
+to you to actually implement all the levels and you know
+1:30:43
+decide how you want to design them all i would say the easiest thing to do would be to just duplicate everything in the
+1:30:51
+scene so you can copy everything go to level two and we'll paste that all in and then
+1:30:58
+this can be a starting point for whatever you want to change for this level right so we can you can kind of go and
+1:31:04
+then tweak this one then for level three you can tweak that one and so you can just continue to add
+1:31:10
+levels can and then change the layout of the bricks in every level start introducing the unbreakable bricks
+1:31:17
+um because that makes the game harder where you have to try to like ignore them and get around them and
+1:31:23
+things like that um but this all looks good the only thing that's missing that we're
+1:31:29
+not going to handle is what happens when you've beaten all of the levels right so at some point
+1:31:36
+you're in say okay maybe there's 10 levels when you go to load the next level
+1:31:42
+it won't exist and so this will end up causing an error because it'll try to
+1:31:47
+load like a level 11 but there won't be a level 11 um and thus you'll get an error so
+1:31:55
+eventually what you probably want to do is say like if the level is greater than
+1:32:00
+like 10 or whatever however many levels you have then maybe instead you load your like
+1:32:07
+you load a different scene that's you know like your win win screen or something like that
+1:32:13
+um whatever you call it um and it and if it's if it's lower than
+1:32:20
+that then yes you will continue so it'd be like something like that it's up to you really to decide how you
+1:32:26
+want to handle that and that will be the challenge for you to implement is how do you
+1:32:33
+add more you know we have the framework in place so you can just add new levels
+1:32:38
+you can just continue to add new levels make sure you add them to your build settings so you can just drag them in
+1:32:45
+and then yeah at some point once you have no more levels maybe add a scene
+1:32:51
+for your like you congratulations you've beaten the game add a scene for a game over
+1:32:57
+right and it'll be up to you to make sure you're loading those scenes in the
+1:33:02
+appropriate places and then if you decide to add some ui to
+1:33:07
+display the score and lives maybe what level you're currently on you know add that ui to your global
+1:33:14
+scene because then that'll persist across all of them and yeah
+1:33:19
+hook it up to your game manager anytime the score or lives or level changes in the game manager you will get a
+1:33:25
+reference to the ui component and you will update like the text or something like that so that's that's for you to determine or
+1:33:33
+figure out on your own that's kind of the challenge i would love to see what you end up doing for your final game i
+1:33:39
+just wanted to kind of show you how to get the framework in place to be able to support multiple levels
+1:33:46
+but that will actually be it for this tutorial i really appreciate you watching this
+Outro
+1:33:52
+tutorial and i hope you learned a thing or two along the way give the video a thumbs up or down to
+1:33:58
+let me know how i did subscribe to the channel for more videos just like this one and leave a comment
+1:34:04
+recommending what you would like to see next if you want to support my work even more
+1:34:09
+you can become a patreon member to receive exclusive benefits including access to the unity assets that i
+1:34:16
+develop link in the description of the video thank you for watching see you in the next one
+1:34:38
+you
+=================================================================================================================
+
+Trong Unity, các thuật toán point, bilinear và trilinear được sử dụng trong việc nội suy (interpolation) các giá trị trong không gian 2D hoặc 3D để tạo ra hiệu ứng mượt mà và chính xác hơn khi làm việc với các tài nguyên như hình ảnh (textures) hay dữ liệu điểm (vertex data). Dưới đây là sự khác nhau giữa ba thuật toán này:
+
+Point Interpolation (Nội suy điểm):
+Point interpolation là phương pháp đơn giản nhất trong số ba phương pháp này. Khi sử dụng point interpolation, giá trị của một điểm bất kỳ trong không gian textured hoặc vertex được lấy từ giá trị gần nhất. Nó không tính toán trung bình hay sự tương quan giữa các giá trị lân cận. Điều này có thể dẫn đến hiện tượng pixelation (hiệu ứng điểm ảnh) hoặc chất lượng hình ảnh kém hơn khi được phóng to hay thu nhỏ.
+
+Bilinear Interpolation (Nội suy tứ diện):
+Bilinear interpolation sử dụng một phép nội suy hai chiều, kết hợp thông tin từ bốn điểm lân cận. Khi nội suy tứ diện, giá trị của một điểm được tính toán bằng cách lấy trung bình có trọng số của các giá trị tại các điểm lân cận, với trọng số được tính dựa trên khoảng cách từ điểm đang xét đến các điểm lân cận. Phương pháp này tạo ra một kết quả mượt mà hơn so với point interpolation và giảm hiện tượng pixelation. Bilinear interpolation thường được sử dụng cho hình ảnh (textures) 2D.
+
+Trilinear Interpolation (Nội suy tứ diện 3D):
+Trilinear interpolation là một phương pháp nội suy ba chiều, thường được sử dụng cho các tài nguyên 3D như textures hoặc dữ liệu vertex. Khi nội suy tứ diện 3D, giá trị của một điểm được tính toán bằng cách sử dụng phép nội suy tứ diện trên hai lớp của các giá trị lân cận. Đầu tiên, nó sử dụng phép nội suy tứ diện để tính toán giá trị trên lớp dưới (lower layer) và lớp trên (upper layer) của các điểm lân cận. Sau đó, nó sử dụng phép nội suy tuyến tính trên các giá trị đã tính để tính toán giá trị cuối cùng của điểm đang xét. Trilinear interpolation cung cấp kết quả mượt mà và chính xác hơn so với bilinear interpolation trong không gian 3D.

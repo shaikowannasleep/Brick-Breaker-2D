@@ -56,5 +56,8 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Brick-Breaker-2D.sln"
+    "dotnet.defaultSolution": "Brick-Breaker-2D.sln",
+    "cSpell.words": [
+        "shaikowannasleep"
+    ]
 }
